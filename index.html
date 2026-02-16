@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Pixel RGB Analysis</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Image Pixel RGB Analysis</h1>
+
+        <div class="main-content">
+            <div class="card upload-container">
+                <p>Select an image to analyze:</p>
+                <input type="file" id="fileInput" accept="image/*">
+                <button class="btn primary-btn" onclick="document.getElementById('fileInput').click()">Select
+                    Image</button>
+                <div id="status">No image selected</div>
+
+                <div id="previewContainer">
+                    <img id="imagePreview" alt="Image Preview">
+                </div>
+            </div>
+
+            <div class="card text-input-container">
+                <label for="userText">Hidden message:</label>
+                <label id="leftChars" for="userText"></label>
+                <textarea id="userText" rows="4" placeholder="message not found or codec not supported"></textarea>
+                <div class="button-group">
+                    <button id="downloadBtn" class="btn secondary-btn">Download Image</button>
+                    <button id="applyBtn" class="btn accent-btn" style="background-color: var(--primary-color);">Apply
+                        to Preview</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/main.js"></script>
+</body>
+
+</html>

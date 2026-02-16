@@ -1,0 +1,213 @@
+:root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #e0e0e0;
+    --text-muted: #a0a0a0;
+    --primary-color: rgb(0, 250, 214);
+    --primary-hover: rgba(0, 250, 214, 0.8);
+    --border-color: #333;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    /* Increased width for 2 columns */
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    width: 100%;
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 40px;
+    text-shadow: 0 0 10px rgba(0, 250, 214, 0.3);
+}
+
+.main-content {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    align-items: flex-start;
+    /* Align to top */
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+}
+
+.upload-container {
+    flex: 1;
+    /* Take 1 part of space */
+    text-align: center;
+    border: 2px dashed var(--border-color);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.upload-container:hover {
+    border-color: var(--primary-color);
+}
+
+#fileInput {
+    display: none;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.primary-btn {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.primary-btn:hover {
+    background-color: var(--primary-color);
+    color: #121212;
+    box-shadow: 0 0 15px rgba(0, 250, 214, 0.4);
+}
+
+.accent-btn {
+    background-color: var(--primary-color);
+    color: #121212;
+}
+
+.accent-btn:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 0 15px rgba(0, 250, 214, 0.4);
+    transform: translateY(-2px);
+}
+
+.secondary-btn {
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+.secondary-btn:hover {
+    background-color: #444;
+}
+
+#status {
+    margin-top: 15px;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+#previewContainer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    min-height: 200px;
+    max-height: 500px;
+}
+
+#imagePreview {
+    max-width: 100%;
+    max-height: 480px;
+    height: auto;
+    object-fit: contain;
+    display: none;
+}
+
+.text-input-container {
+    flex: 1;
+    /* Take 1 part of space */
+    display: none;
+    /* Controlled by JS */
+    flex-direction: column;
+}
+
+/* Ensure text container shows properly when active */
+.text-input-container.active {
+    display: flex;
+}
+
+.text-input-container label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+#userText {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #2a2a2a;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-family: var(--font-family);
+    font-size: 16px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#userText:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(0, 250, 214, 0.2);
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .upload-container,
+    .text-input-container {
+        width: 100%;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
