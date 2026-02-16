@@ -33,5 +33,6 @@ Imcypher uses the **Least Significant Bit (LSB)** technique. It takes the binary
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-Created by Gustavo.
+Created by Freuk AKA Gustavo.
+
 
