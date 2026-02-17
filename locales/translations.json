@@ -28,7 +28,9 @@
         "previewUpdatedAppend": "Preview updated (Append)!",
         "imageDownloaded": "Image downloaded!",
         "lsbFound": "Found LSB message!",
-        "appendInfinite": "Append Mode: Unlimited capacity (increases file size)."
+        "appendInfinite": "Append Mode: Unlimited capacity (increases file size).",
+        "alertNoImage": "Please select an image first.",
+        "alertInvalidImage": "Please select a valid image file."
     },
     "es": {
         "title": "Análisis de Píxeles RGB",
@@ -59,6 +61,8 @@
         "previewUpdatedAppend": "¡Vista previa actualizada (Adjuntar)!",
         "imageDownloaded": "¡Imagen descargada!",
         "lsbFound": "¡Mensaje LSB encontrado!",
-        "appendInfinite": "Modo Adjuntar: Capacidad ilimitada (aumenta tamaño de archivo)."
+        "appendInfinite": "Modo Adjuntar: Capacidad ilimitada (aumenta tamaño de archivo).",
+        "alertNoImage": "Por favor, selecciona una imagen primero.",
+        "alertInvalidImage": "Por favor, selecciona un archivo de imagen válido."
     }
 }

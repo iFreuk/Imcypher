@@ -10,13 +10,14 @@
 
 <body>
     <div class="container">
-        <h1>Image Pixel RGB Analysis</h1>
+        <h1 id="mainTitle">Image Pixel RGB Analysis</h1>
 
         <div class="main-content">
             <div class="card upload-container">
-                <p>Select an image to analyze:</p>
+                <p id="uploadDesc">Select an image to analyze:</p>
                 <input type="file" id="fileInput" accept="image/*">
-                <button class="btn primary-btn" onclick="document.getElementById('fileInput').click()">Select
+                <button id="selectImageBtn" class="btn primary-btn"
+                    onclick="document.getElementById('fileInput').click()">Select
                     Image</button>
                 <div id="status">No image selected</div>
 
@@ -26,14 +27,14 @@
             </div>
 
             <div class="card text-input-container">
-                <label for="stegSelect">Method:</label>
+                <label id="methodLabel" for="stegSelect">Method:</label>
                 <select id="stegSelect">
-                    <option value="append">Append Data (JPG - Low Size)</option>
-                    <option value="lsb">Pixel LSB (PNG - Lossless)</option>
+                    <option id="opt-append" value="append">Append Data (JPG - Low Size)</option>
+                    <option id="opt-lsb" value="lsb">Pixel LSB (PNG - Lossless)</option>
                 </select>
                 <p id="methodDescription" class="method-info"></p>
 
-                <label for="userText">Hidden message:</label>
+                <label id="hiddenMessageLabel" for="userText">Hidden message:</label>
                 <label id="leftChars" for="userText"></label>
                 <textarea id="userText" rows="4" placeholder="message not found or codec not supported"></textarea>
                 <div class="button-group">
@@ -50,21 +51,22 @@
     <div id="helpModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2>⚠️ How to Share Safely</h2>
-            <p>Messaging apps like <strong>WhatsApp, Messenger, and Telegram</strong> compress images, which <span
-                    style="color: #ff5252">destroys</span> hidden messages.</p>
+            <h2 id="helpTitle">⚠️ How to Share Safely</h2>
+            <p id="helpDesc">Messaging apps like <strong>WhatsApp, Messenger, and Telegram</strong> compress images,
+                which <span style="color: #ff5252">destroys</span> hidden messages.</p>
 
             <div class="instructions">
-                <h3>To keep the message:</h3>
-                <p>You must send the image as a <strong>FILE / DOCUMENT</strong>.</p>
+                <h3 id="helpInstrTitle">To keep the message:</h3>
+                <p id="helpInstrText">You must send the image as a <strong>FILE / DOCUMENT</strong>.</p>
                 <ul>
-                    <li><strong>Android:</strong> Tap <span class="highlight">Paperclip</span> ➔ Select <span
-                            class="highlight">Document</span> ➔ Pick the image.</li>
-                    <li><strong>iOS:</strong> Save to Files ➔ Tap <span class="highlight">+</span> ➔ Select <span
-                            class="highlight">Document</span>.</li>
-                    <li><strong>Desktop:</strong> Drag and drop as a file, or select "Document" option.</li>
+                    <li id="helpAndroid"><strong>Android:</strong> Tap <span class="highlight">Paperclip</span> ➔ Select
+                        <span class="highlight">Document</span> ➔ Pick the image.</li>
+                    <li id="helpIOS"><strong>iOS:</strong> Save to Files ➔ Tap <span class="highlight">+</span> ➔ Select
+                        <span class="highlight">Document</span>.</li>
+                    <li id="helpDesktop"><strong>Desktop:</strong> Drag and drop as a file, or select "Document" option.
+                    </li>
                 </ul>
-                <p class="summary">If you send it as a normal "Photo", the message will be lost!</p>
+                <p id="helpSummary" class="summary">If you send it as a normal "Photo", the message will be lost!</p>
             </div>
         </div>
     </div>

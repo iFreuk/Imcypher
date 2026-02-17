@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
             readerBuffer.readAsArrayBuffer(file);
 
         } else {
-            alert('Please select a valid image file.');
+            alert(getText("alertInvalidImage"));
             imagePreview.style.display = 'none';
             statusElement.textContent = getText("status");
         }
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     downloadBtn.addEventListener('click', function (event) {
         if (!imagePreview.src || imagePreview.style.display === 'none') {
-            alert("Please select an image first.");
+            alert(getText("alertNoImage"));
             return;
         }
 
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     applyBtn.addEventListener('click', function (event) {
         if (!imagePreview.src || imagePreview.style.display === 'none') {
-            alert("Please select an image first.");
+            alert(getText("alertNoImage"));
             return;
         }
 
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const dataUrl = encodeLSB(textToHide);
             if (dataUrl) {
                 imagePreview.src = dataUrl;
-                statusElement.textContent = "Preview updated (LSB)!";
+                statusElement.textContent = getText("previewUpdatedLSB");
             }
         } else {
             const blob = encodeAppend(textToHide);
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     originalFileBuffer = e.target.result;
-                    statusElement.textContent = "Preview updated (Append)!";
+                    statusElement.textContent = getText("previewUpdatedAppend");
                     // Re-analyze just to be sure
                     analyzeAppend();
                 };
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
         link.download = filename;
         link.href = url;
         link.click();
-        statusElement.textContent = "Image downloaded!";
+        statusElement.textContent = getText("imageDownloaded");
     }
 
     // --- LSB Logic ---
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function analyzeLSB(img) {
         if (stegSelect.value !== 'lsb') return;
 
-        statusElement.textContent = "Analyzing pixels (LSB)...";
+        statusElement.textContent = getText("analyzing");
 
         const canvas = document.createElement('canvas');
         canvasContext = canvas.getContext('2d');
@@ -285,7 +285,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const pixelCount = width * height;
 
         const maxMessageBytes = Math.floor((pixelCount * 3) / 8);
-        statusElement.textContent = `LSB Max capacity: ${maxMessageBytes} characters.`;
+        const capText = getText("maxCapacity").replace("{bytes}", maxMessageBytes);
+        statusElement.textContent = capText;
 
         const hiddenMessage = decodeLSB(subpixels);
 
@@ -369,15 +370,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function analyzeAppend() {
         if (stegSelect.value !== 'append') return;
         if (!originalFileBuffer) {
-            statusElement.textContent = "Waiting for file...";
+            statusElement.textContent = getText("status");
             return;
         }
 
-        statusElement.textContent = "Checking for appended data...";
+        statusElement.textContent = getText("analyzing");
         messageTextBoxContainer.classList.add("active");
 
         // Check capacity? Unlimited basically (filesize limit)
-        statusElement.textContent = "Append Mode: Unlimited capacity (increases file size).";
+        statusElement.textContent = getText("appendInfinite");
 
         const message = decodeAppend(originalFileBuffer);
         if (message && document.activeElement !== messageTextBoxValue) {
