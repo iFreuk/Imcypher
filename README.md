@@ -2,8 +2,6 @@
 
 **Imcypher** is a simple yet powerful web application that allows you to hide secret text messages inside images using Least Significant Bit (LSB) steganography. It runs entirely in your browser, ensuring your data remains private.
 
-![Imcypher Screenshot](screenshot_placeholder.png) *(You can add a screenshot here later)*
-
 ## Features
 
 *   **Secure & Private**: All processing happens locally in your browser. No images are uploaded to any server.
@@ -35,3 +33,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 Created by Gustavo.
+
