@@ -26,14 +26,45 @@
             </div>
 
             <div class="card text-input-container">
+                <label for="stegSelect">Method:</label>
+                <select id="stegSelect">
+                    <option value="append">Append Data (JPG - Low Size)</option>
+                    <option value="lsb">Pixel LSB (PNG - Lossless)</option>
+                </select>
+                <p id="methodDescription" class="method-info"></p>
+
                 <label for="userText">Hidden message:</label>
                 <label id="leftChars" for="userText"></label>
                 <textarea id="userText" rows="4" placeholder="message not found or codec not supported"></textarea>
                 <div class="button-group">
                     <button id="downloadBtn" class="btn secondary-btn">Download Image</button>
+                    <button id="helpBtn" class="btn icon-btn" title="How to share safely">?</button>
                     <button id="applyBtn" class="btn accent-btn" style="background-color: var(--primary-color);">Apply
                         to Preview</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>⚠️ How to Share Safely</h2>
+            <p>Messaging apps like <strong>WhatsApp, Messenger, and Telegram</strong> compress images, which <span
+                    style="color: #ff5252">destroys</span> hidden messages.</p>
+
+            <div class="instructions">
+                <h3>To keep the message:</h3>
+                <p>You must send the image as a <strong>FILE / DOCUMENT</strong>.</p>
+                <ul>
+                    <li><strong>Android:</strong> Tap <span class="highlight">Paperclip</span> ➔ Select <span
+                            class="highlight">Document</span> ➔ Pick the image.</li>
+                    <li><strong>iOS:</strong> Save to Files ➔ Tap <span class="highlight">+</span> ➔ Select <span
+                            class="highlight">Document</span>.</li>
+                    <li><strong>Desktop:</strong> Drag and drop as a file, or select "Document" option.</li>
+                </ul>
+                <p class="summary">If you send it as a normal "Photo", the message will be lost!</p>
             </div>
         </div>
     </div>
