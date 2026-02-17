@@ -8,243 +8,479 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageTextBoxContainer = document.querySelector(".text-input-container");
     const messageTextBoxValue = document.getElementById("userText");
     const leftCharsLabel = document.getElementById("leftChars");
+    const stegSelect = document.getElementById('stegSelect');
+
+    // Modal
+    // Modal
+    const helpBtn = document.getElementById("helpBtn");
+    const modal = document.getElementById("helpModal");
+    const span = document.getElementsByClassName("close-modal")[0];
+
+    // Language
+    let currentLang = 'en';
+    let translations = {};
+
+    // Elements to translate (id -> translation key)
+    const translatableIds = {
+        'mainTitle': 'title',
+        'uploadDesc': 'description',
+        'selectImageBtn': 'selectKey',
+        'status': 'status',
+        'methodLabel': 'methodLabel',
+        'opt-lsb': 'methodLsb',
+        'opt-append': 'methodAppend',
+        'hiddenMessageLabel': 'hiddenMessageLabel',
+        'userText': 'placeholder', // specialized handling for placeholder
+        'downloadBtn': 'downloadBtn',
+        'applyBtn': 'applyBtn',
+        'helpTitle': 'helpTitle',
+        'helpDesc': 'helpDesc',
+        'helpInstrTitle': 'helpInstructionsTitle',
+        'helpInstrText': 'helpInstructionsText',
+        'helpAndroid': 'helpAndroid',
+        'helpIOS': 'helpIOS',
+        'helpDesktop': 'helpDesktop',
+        'helpSummary': 'helpSummary'
+    };
+
+    // Load Translations
+    fetch('locales/translations.json')
+        .then(response => response.json())
+        .then(data => {
+            translations = data;
+            detectLanguage();
+        })
+        .catch(err => {
+            console.error("Could not load translations:", err);
+            // Fallback: Do nothing, keep English HTML defaults
+        });
+
+    function detectLanguage() {
+        const userLang = navigator.language || navigator.userLanguage;
+        if (userLang.startsWith('es')) {
+            currentLang = 'es';
+        } else {
+            currentLang = 'en';
+        }
+        updateLanguage(currentLang);
+    }
+
+    function updateLanguage(lang) {
+        if (!translations[lang]) return;
+        const t = translations[lang];
+
+        // Update static elements
+        for (const [id, key] of Object.entries(translatableIds)) {
+            const element = document.getElementById(id);
+            if (element) {
+                if (id === 'userText') {
+                    element.placeholder = t[key];
+                } else if (id === 'selectImageBtn') {
+                    // Start of complex buttons or HTML content
+                    element.textContent = t[key];
+                } else {
+                    element.innerHTML = t[key];
+                }
+            }
+        }
+
+        // Update methods check to refresh description
+        checkMethods();
+    }
+
+    function getText(key) {
+        if (translations[currentLang] && translations[currentLang][key]) {
+            return translations[currentLang][key];
+        }
+        // Fallback to English if loaded, otherwise raw key/empty
+        if (translations['en'] && translations['en'][key]) {
+            return translations['en'][key];
+        }
+        return key;
+    }
+
+    helpBtn.onclick = function () {
+        modal.style.display = "block";
+    }
+    span.onclick = function () {
+        modal.style.display = "none";
+    }
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
 
     let canvasContext;
-    let originalImageData; // Store original image data to enable re-encoding without reloading
+    let originalImageData; // For LSB: Pixel data
+    let originalFileBuffer; // For Append: Raw file bytes
+    let originalFileName = "image.png";
+    let originalFileType = "image/png";
+
+    // Signature for Append Method
+    const APPEND_SIGNATURE = "IMCYPHER_EOF";
 
     fileInput.addEventListener('change', function (event) {
         const file = event.target.files[0];
 
         if (file && file.type.match('image.*')) {
-            statusElement.textContent = "Processing image...";
+            statusElement.textContent = getText("processing");
+            originalFileName = file.name;
+            originalFileType = file.type;
 
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
+            // Read as DataURL for preview
+            const readerURL = new FileReader();
+            readerURL.onload = function (e) {
                 imagePreview.src = e.target.result;
                 imagePreview.style.display = 'block';
+            };
+            readerURL.readAsDataURL(file);
 
-                // Wait for image to load to analyze it
-                imagePreview.onload = function () {
-                    analyzeImagePixels(imagePreview);
-                };
-            }
+            // Read as ArrayBuffer for Append method
+            const readerBuffer = new FileReader();
+            readerBuffer.onload = function (e) {
+                originalFileBuffer = e.target.result;
+                // We'll analyze after image loads (which triggers LSB analysis)
+                // or we can analyze Append immediately, but let's wait for UI consistency.
+                checkMethods();
+            };
+            readerBuffer.readAsArrayBuffer(file);
 
-            reader.readAsDataURL(file);
         } else {
             alert('Please select a valid image file.');
             imagePreview.style.display = 'none';
-            statusElement.textContent = "No image selected";
+            statusElement.textContent = getText("status");
+        }
+    });
+
+    // When image loads, LSB analysis is possible
+    imagePreview.addEventListener('load', function () {
+        if (!originalImageData && !originalFileBuffer) return; // Initial load or error
+        analyzeLSB(imagePreview);
+        checkMethods();
+    });
+
+    stegSelect.addEventListener('change', function () {
+        checkMethods();
+    });
+
+    const methodDescription = document.getElementById('methodDescription');
+
+    function checkMethods() {
+        const method = stegSelect.value;
+        if (method === 'lsb') {
+            analyzeLSB(imagePreview);
+            // Dynamic text from JSON
+            if (Object.keys(translations).length > 0) {
+                methodDescription.innerHTML = getText("methodLsbDesc");
+            } else {
+                methodDescription.innerHTML = "Hides message inside pixels (PNG only). <br><span class='warning-text' style='color:#ffab40; font-size:0.9em; cursor:pointer;'>⚠️ Breaks on WhatsApp/Socials. Click ? for help.</span>";
+            }
+        } else {
+            analyzeAppend();
+            if (Object.keys(translations).length > 0) {
+                methodDescription.innerHTML = getText("methodAppendDesc");
+            } else {
+                methodDescription.innerHTML = "Appends message to file (Keeps JPG size). <br><span class='warning-text' style='color:#ffab40; font-size:0.9em; cursor:pointer;'>⚠️ Breaks on WhatsApp/Socials. Click ? for help.</span>";
+            }
+        }
+    }
+
+    // Delegate click for dynamic warning text
+    methodDescription.addEventListener('click', function (e) {
+        if (e.target.classList.contains('warning-text')) {
+            modal.style.display = "block";
         }
     });
 
     downloadBtn.addEventListener('click', function (event) {
-        if (!originalImageData) {
+        if (!imagePreview.src || imagePreview.style.display === 'none') {
             alert("Please select an image first.");
             return;
         }
 
+        const method = stegSelect.value;
         const textToHide = messageTextBoxValue.value;
-        const dataUrl = encodeImage(textToHide);
-        if (dataUrl) {
-            downloadImage(dataUrl);
+
+        if (method === 'lsb') {
+            const dataUrl = encodeLSB(textToHide);
+            if (dataUrl) {
+                downloadLink(dataUrl, 'secret-image.png');
+            }
+        } else {
+            const blob = encodeAppend(textToHide);
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                // Keep original extension if possible, or default to jpg/original
+                let ext = originalFileName.split('.').pop();
+                downloadLink(url, `secret-image.${ext}`);
+            }
         }
     });
 
     applyBtn.addEventListener('click', function (event) {
-        if (!originalImageData) {
+        if (!imagePreview.src || imagePreview.style.display === 'none') {
             alert("Please select an image first.");
             return;
         }
 
+        const method = stegSelect.value;
         const textToHide = messageTextBoxValue.value;
-        const dataUrl = encodeImage(textToHide);
-        if (dataUrl) {
-            imagePreview.src = dataUrl;
-            statusElement.textContent = "Preview updated! Right-click to copy/save.";
-            // Note: changing src triggers onload, which triggers analyze, which reads the message back!
-            // This confirms consistency.
+
+        if (method === 'lsb') {
+            const dataUrl = encodeLSB(textToHide);
+            if (dataUrl) {
+                imagePreview.src = dataUrl;
+                statusElement.textContent = "Preview updated (LSB)!";
+            }
+        } else {
+            const blob = encodeAppend(textToHide);
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                imagePreview.src = url;
+                // Update our buffer to reflect the change so subsequent saves include it!
+                // We need to read the blob back into array buffer
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    originalFileBuffer = e.target.result;
+                    statusElement.textContent = "Preview updated (Append)!";
+                    // Re-analyze just to be sure
+                    analyzeAppend();
+                };
+                reader.readAsArrayBuffer(blob);
+            }
         }
     });
 
-    // Optional: Update char count as user types
-    messageTextBoxValue.addEventListener('input', function () {
-        if (originalImageData) {
-            // We can calculate remaining space if needed, but for now just let them type
-        }
-    });
+    function downloadLink(url, filename) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        statusElement.textContent = "Image downloaded!";
+    }
 
+    // --- LSB Logic ---
 
-    function analyzeImagePixels(img) {
-        statusElement.textContent = "Analyzing pixels...";
+    function analyzeLSB(img) {
+        if (stegSelect.value !== 'lsb') return;
 
-        // Create canvas to read pixel data
+        statusElement.textContent = "Analyzing pixels (LSB)...";
+
         const canvas = document.createElement('canvas');
         canvasContext = canvas.getContext('2d');
         const width = img.naturalWidth;
         const height = img.naturalHeight;
 
-        // Set canvas dimensions
         canvas.width = width;
         canvas.height = height;
 
         // Draw image to canvas
         canvasContext.drawImage(img, 0, 0, width, height);
         messageTextBoxContainer.classList.add("active");
-        // messageTextBoxContainer.style.display = "block"; // Start using class for flex control
 
         // Get pixel data
         originalImageData = canvasContext.getImageData(0, 0, width, height);
         const subpixels = originalImageData.data;
         const pixelCount = width * height;
 
-        // Capacity: 3 bits per pixel (RGB, skipping Alpha). 8 bits per char.
-        // Formula: (TotalPixels * 3) / 8 = Maximum Bytes (Characters)
         const maxMessageBytes = Math.floor((pixelCount * 3) / 8);
-        statusElement.textContent = `Max capacity: ${maxMessageBytes} characters.`;
+        statusElement.textContent = `LSB Max capacity: ${maxMessageBytes} characters.`;
 
-        // Attempt to read message
-        const hiddenMessage = decodeMessage(subpixels, width, height);
+        const hiddenMessage = decodeLSB(subpixels);
 
-        if (hiddenMessage) {
+        // Only update text if it looks like a message and we aren't typing
+        if (hiddenMessage && document.activeElement !== messageTextBoxValue) {
             messageTextBoxValue.value = hiddenMessage;
-            console.log("Found hidden message!");
-        } else {
-            // Only clear if we didn't just type it? 
-            // Actually, analyze is called on LOAD. If we just applied changes, 
-            // messageTextBoxValue ALREADY has the text. 
-            // But let's let the decoder confirm it.
-            if (document.activeElement !== messageTextBoxValue) {
-                messageTextBoxValue.value = "";
-            }
-            console.log("No valid hidden message found.");
+            console.log("Found LSB message!");
+        } else if (document.activeElement !== messageTextBoxValue) {
+            messageTextBoxValue.value = "";
         }
+
     }
 
-    // Decodes message from the image data (subpixels)
-    // Returns the string if found, or empty string if not found/invalid.
-    function decodeMessage(subpixels, width, height) {
-        let binaryString = "";
+    function decodeLSB(subpixels) {
         let decodedText = "";
-
-        // We only check a reasonable amount of bytes to avoid freezing if it's just noise
-        // But for a true steganography tool, we should read until null terminator.
-        // Let's read byte by byte.
-
-        let bitIndex = 0;
         let charCode = 0;
-        let charMask = 128; // 10000000
+        let charMask = 128;
 
-        // Iterate over all pixel data
         for (let i = 0; i < subpixels.length; i++) {
-            // Skip Alpha channel (every 4th byte: 3, 7, 11...)
-            if ((i + 1) % 4 === 0) continue;
+            if ((i + 1) % 4 === 0) continue; // Skip Alpha
 
-            const bit = subpixels[i] & 1; // Get LSB
-
-            // Reconstruct the byte
-            if (bit === 1) {
-                charCode |= charMask;
-            }
+            const bit = subpixels[i] & 1;
+            if (bit === 1) charCode |= charMask;
             charMask >>= 1;
 
-            // If we completed a byte
             if (charMask === 0) {
-                // If it's the null terminator, stop
-                if (charCode === 0) {
-                    return decodedText;
-                }
-
-                // If it's a printable character or valid control char?
-                // For simplicity, just add it. Mumbo jumbo will look like mumbo jumbo.
+                if (charCode === 0) return decodedText;
                 decodedText += String.fromCharCode(charCode);
-
-                // Reset for next byte
                 charCode = 0;
                 charMask = 128;
-
-                // Safety break for very large images checking random noise
-                // If text gets too long without a null terminator, assume it's noise
-                if (decodedText.length > 10000) {
-                    // This is a heuristic. In a robust app, we might use a header signature.
-                    // For this simple app, we'll return what we found or maybe empty if it looks garbage?
-                    // Let's just return nothing if it's too long, likely it's raw image.
-                    return "";
-                }
+                if (decodedText.length > 50000) return ""; // Junk
             }
         }
-
-        return ""; // Hit end of image without null terminator
+        return "";
     }
 
-    function encodeImage(text) {
-        // Create a working copy of image data
+    function encodeLSB(text) {
+        if (!originalImageData) return null;
+
         const width = originalImageData.width;
         const height = originalImageData.height;
         const newImageData = canvasContext.createImageData(width, height);
         const subpixels = newImageData.data;
 
-        // Copy original data first
+        // Copy original
         for (let i = 0; i < originalImageData.data.length; i++) {
             subpixels[i] = originalImageData.data[i];
         }
 
-        // Prepare text: Add null terminator
         const textToEncode = text + String.fromCharCode(0);
-
         let charIndex = 0;
-        let charMask = 128; // 10000000
+        let charMask = 128;
         let currentByte = textToEncode.charCodeAt(charIndex);
 
-        let bitsEncoded = 0;
-        const totalBits = textToEncode.length * 8;
-
-        // Iterate subpixels to hide data
-        for (let i = 0; i < subpixels.length && bitsEncoded < totalBits; i++) {
-            // Skip Alpha
+        for (let i = 0; i < subpixels.length; i++) {
             if ((i + 1) % 4 === 0) continue;
 
-            // Get current bit to hide
+            if (charIndex >= textToEncode.length) break;
+
             const bitToHide = (currentByte & charMask) ? 1 : 0;
+            if (bitToHide === 1) subpixels[i] |= 1;
+            else subpixels[i] &= 254;
 
-            // Modify LSB
-            if (bitToHide === 1) {
-                subpixels[i] |= 1; // Set LSB to 1
-            } else {
-                subpixels[i] &= 254; // Set LSB to 0 (11111110)
-            }
-
-            // Move to next bit
             charMask >>= 1;
-            bitsEncoded++;
-
             if (charMask === 0) {
-                // Determine next byte
                 charIndex++;
                 if (charIndex < textToEncode.length) {
                     currentByte = textToEncode.charCodeAt(charIndex);
                     charMask = 128;
-                } else {
-                    break; // Done encoding
                 }
             }
         }
 
-        // Put new data into a temporary canvas to save
-        // We reuse the canvasContext but we need the size to be correct
         canvasContext.putImageData(newImageData, 0, 0);
-
         return canvasContext.canvas.toDataURL();
     }
 
-    function downloadImage(dataUrl) {
-        // Create download link
-        const link = document.createElement('a');
-        link.download = 'secret-image.png'; // PNG is lossless, critical for steganography!
-        link.href = dataUrl;
-        link.click();
 
-        alert("Image downloaded!");
+    // --- Append Logic ---
+
+    function analyzeAppend() {
+        if (stegSelect.value !== 'append') return;
+        if (!originalFileBuffer) {
+            statusElement.textContent = "Waiting for file...";
+            return;
+        }
+
+        statusElement.textContent = "Checking for appended data...";
+        messageTextBoxContainer.classList.add("active");
+
+        // Check capacity? Unlimited basically (filesize limit)
+        statusElement.textContent = "Append Mode: Unlimited capacity (increases file size).";
+
+        const message = decodeAppend(originalFileBuffer);
+        if (message && document.activeElement !== messageTextBoxValue) {
+            messageTextBoxValue.value = message;
+        } else if (document.activeElement !== messageTextBoxValue) {
+            // Check if we just switched methods, maybe preserve text?
+            // If empty, clear it.
+            messageTextBoxValue.value = "";
+        }
+    }
+
+    function decodeAppend(buffer) {
+        const view = new DataView(buffer);
+        const totalLen = buffer.byteLength;
+        const sigLen = APPEND_SIGNATURE.length;
+
+        if (totalLen < sigLen + 4) return ""; // Too small
+
+        // Check for signature at end
+        let sigFound = true;
+        for (let i = 0; i < sigLen; i++) {
+            // Read backwards match? Or forward at (total - sigLen + i)
+            const charCode = view.getUint8(totalLen - sigLen + i);
+            if (String.fromCharCode(charCode) !== APPEND_SIGNATURE[i]) {
+                sigFound = false;
+                break;
+            }
+        }
+
+        if (!sigFound) return "";
+
+        // Read Length (4 bytes before signature)
+        // Ensure we have enough bytes
+        if (totalLen < sigLen + 4) return "";
+        const msgLen = view.getUint32(totalLen - sigLen - 4);
+
+        if (msgLen > totalLen - sigLen - 4) return ""; // Invalid length
+
+        // Read Message
+        let msg = "";
+        const startPos = totalLen - sigLen - 4 - msgLen;
+        for (let i = 0; i < msgLen; i++) {
+            msg += String.fromCharCode(view.getUint8(startPos + i));
+        }
+
+        return msg;
+    }
+
+    function encodeAppend(text) {
+        if (!originalFileBuffer) return null;
+
+        // Structure: [Original Data] [Message Bytes] [Length (4 bytes)] [Signature]
+        // Note: We need to be careful not to append multiple times if we are re-encoding an already encoded file!
+        // For simplicity, we can strip existing data if signature found, then append.
+
+        let baseBuffer = originalFileBuffer;
+
+        // Check if already has data, strip it if so?
+        // Actually, let's just strip it to be safe 
+        // (Assume originalFileBuffer might be the "Clean" one if we loaded it, but if we "Applied" it might be dirty)
+        // decodeAppend returns msg on dirty buffer.
+        // Let's implement strip.
+
+        const existingMsg = decodeAppend(originalFileBuffer);
+        if (existingMsg !== "") {
+            // Strip it
+            const view = new DataView(originalFileBuffer);
+            const totalLen = originalFileBuffer.byteLength;
+            const sigLen = APPEND_SIGNATURE.length;
+            const msgLen = view.getUint32(totalLen - sigLen - 4);
+            const extraBytes = sigLen + 4 + msgLen;
+            baseBuffer = originalFileBuffer.slice(0, totalLen - extraBytes);
+        }
+
+        // Create new buffer
+        const textLen = text.length;
+        const sigLen = APPEND_SIGNATURE.length;
+        const newTotalLen = baseBuffer.byteLength + textLen + 4 + sigLen;
+
+        const newBuffer = new ArrayBuffer(newTotalLen);
+        const newView = new Uint8Array(newBuffer);
+        const baseView = new Uint8Array(baseBuffer);
+
+        // Copy base
+        newView.set(baseView, 0);
+
+        // Append Text
+        let offset = baseBuffer.byteLength;
+        for (let i = 0; i < textLen; i++) {
+            newView[offset++] = text.charCodeAt(i);
+        }
+
+        // Append Length (4 bytes)
+        const dateView = new DataView(newBuffer);
+        dateView.setUint32(offset, textLen);
+        offset += 4;
+
+        // Append Signature
+        for (let i = 0; i < sigLen; i++) {
+            newView[offset++] = APPEND_SIGNATURE.charCodeAt(i);
+        }
+
+        return new Blob([newBuffer], { type: originalFileType });
     }
 
 });
